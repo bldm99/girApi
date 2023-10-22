@@ -60,7 +60,7 @@ export const registroUsuario = async (req, res) => {
 export const registrarRiesgo = async (req, res) => {
     //destructurando
     const { _id, nombre, impacto_desc, impacto_num, impacto_porc, probabilidad_desc, probabilidad_num,
-        probabilidad_porc, calificacion, riesgo , proceso_asignado } = req.body;
+        probabilidad_porc, calificacion, riesgo, proceso_asignado } = req.body;
     const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'riesgos': {
@@ -106,25 +106,51 @@ export const buscarRiesgos = async (req, res) => {
 
 /*----------------------------------Macroprocesos----------------------------*/
 
-//Registrar Macroproceso
+//Registrar Macroproceso y sus riesgos
 export const registrarMacroproceso = async (req, res) => {
     //destructurando
-    const { _id, m_nombre, m_tipo, m_categoria, m_descripcion} = req.body;
+    const { _id, m_nombre, m_tipo, m_descripcion, m_riesgos } = req.body;
     const tablemacro = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'macroprocesos': {
                 m_nombre,
                 m_tipo,
-                m_categoria,
-                m_descripcion    
+                m_descripcion,
+                m_riesgos
             }
         }
     })
+    
     if (!tablemacro) {
         res.status(500).json({ error: "No found" })
     }
     res.status(200).json(tablemacro);
 }
+
+
+//Registrar un riesgo de un macroproceso
+export const actualizarMriesgos = async (req, res) => {
+    const { _idUsuario, _idMacroproceso, nuevosRiesgos } = req.body; // Usar _idUsuario y _idMacroproceso
+
+    try {
+        const resultado = await Riesgo.updateOne(
+            { "_id": _idUsuario, "macroprocesos._id": _idMacroproceso }, // Usar _idUsuario y _idMacroproceso
+            { $push: { 'macroprocesos.$.m_riesgos': { $each: nuevosRiesgos } } }
+        );
+
+        /*if (resultado.nModified > 0) {
+            res.status(200).json({ message: 'Datos actualizados correctamente.' });
+        } else {
+            res.status(404).json({ error: 'No se encontró el documento para actualizar.' });
+        }*/
+    } catch (error) {
+        res.status(500).json({ error: 'Error en la actualización: ' + error.message });
+    }
+};
+
+
+
+
 
 //Buscar todos los riesgos de un solo usuario
 export const buscarMacroprocesos = async (req, res) => {
