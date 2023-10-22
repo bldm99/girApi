@@ -45,6 +45,13 @@ const riesgoSchema = new Schema({
     proceso_asignado: { type: String },
     fecha: { type: Date, default: Date.now } // Agrega el campo 'fecha' con la fecha actual por defecto
 });
+const macroproscesoSchema = new Schema({
+    m_nombre: { type: String },
+    m_tipo: { type: String },
+    m_categoria: { type: String },
+    m_descripcion: { type: String }, 
+    fecha: { type: Date, default: Date.now } // Agrega el campo 'fecha' con la fecha actual por defecto
+});
 
 const mySchema = new Schema({
     user: { type: String },
@@ -59,7 +66,8 @@ const mySchema = new Schema({
     telefono: { type: String },
     tarjeta: { type: String },
     suscripcion: { type: String },
-    riesgos: [riesgoSchema] // Utiliza el subesquema 'riesgoSchema'
+    riesgos: [riesgoSchema] ,// Utiliza el subesquema 'riesgoSchema'
+    macroprocesos: [macroproscesoSchema]
 });
 
 

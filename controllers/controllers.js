@@ -103,24 +103,65 @@ export const buscarRiesgos = async (req, res) => {
 };
 
 
-export const r = async (req, res) => {
 
+/*----------------------------------Macroprocesos----------------------------*/
+
+//Registrar Macroproceso
+export const registrarMacroproceso = async (req, res) => {
+    //destructurando
+    const { _id, m_nombre, m_tipo, m_categoria, m_descripcion} = req.body;
+    const tablemacro = await Riesgo.updateOne({ _id: _id }, {
+        $push: {
+            'macroprocesos': {
+                m_nombre,
+                m_tipo,
+                m_categoria,
+                m_descripcion    
+            }
+        }
+    })
+    if (!tablemacro) {
+        res.status(500).json({ error: "No found" })
+    }
+    res.status(200).json(tablemacro);
+}
+
+//Buscar todos los riesgos de un solo usuario
+export const buscarMacroprocesos = async (req, res) => {
+    try {
+        const { _id } = req.query; // Obtener el ID del usuario desde los parámetros de la URL
+
+        const documento = await Riesgo.findById(_id);
+        if (!documento) {
+            return res.status(404).json({ error: 'Documento no encontrado' });
+        }
+
+        const macroprocesos = documento.macroprocesos;
+
+        res.status(200).json(macroprocesos);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error al buscar los riesgos' });
+    }
+};
+
+
+
+
+
+
+
+
+
+export const r = async (req, res) => {
     const errors = validationResult(req)
     try {
-
-
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
         }
         console.log(req.body)
         res.json({ ok: 'hhhhh' })
-
-
-
-
-
     } catch (error) {
         console.log(error.code);
     }
-
 }
