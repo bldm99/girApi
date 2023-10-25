@@ -132,17 +132,22 @@ export const registrarMacroproceso = async (req, res) => {
 export const actualizarMriesgos = async (req, res) => {
     const { _idUsuario, _idMacroproceso, nuevosRiesgos } = req.body; // Usar _idUsuario y _idMacroproceso
 
+    //Validamos si nuevosRiesgos tiene datos antes de hacer algun registro
+    if (!nuevosRiesgos || nuevosRiesgos.length === 0) {
+        return res.status(400).json({ error: 'La lista de nuevos riesgos está vacía o no se proporcionó.' });
+    }
     try {
         const resultado = await Riesgo.updateOne(
             { "_id": _idUsuario, "macroprocesos._id": _idMacroproceso }, // Usar _idUsuario y _idMacroproceso
             { $push: { 'macroprocesos.$.m_riesgos': { $each: nuevosRiesgos } } }
         );
 
-        /*if (resultado.nModified > 0) {
+
+        if (resultado.modifiedCount > 0) {
             res.status(200).json({ message: 'Datos actualizados correctamente.' });
         } else {
             res.status(404).json({ error: 'No se encontró el documento para actualizar.' });
-        }*/
+        }
     } catch (error) {
         res.status(500).json({ error: 'Error en la actualización: ' + error.message });
     }
