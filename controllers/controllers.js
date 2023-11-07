@@ -120,7 +120,7 @@ export const registrarMacroproceso = async (req, res) => {
             }
         }
     })
-    
+
     if (!tablemacro) {
         res.status(500).json({ error: "No found" })
     }
@@ -157,7 +157,7 @@ export const actualizarMriesgos = async (req, res) => {
 
 
 
-//Buscar todos los riesgos de un solo usuario
+//Buscar todos macroprocesos
 export const buscarMacroprocesos = async (req, res) => {
     try {
         const { _id } = req.query; // Obtener el ID del usuario desde los parámetros de la URL
@@ -173,6 +173,34 @@ export const buscarMacroprocesos = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Error al buscar los riesgos' });
+    }
+};
+
+
+//Buscar todos macroprocesos
+export const buscarMacroriesgos = async (req, res) => {
+    try {
+        const { _id, macroprocesoId } = req.query;
+
+        // Primero, verifica si el usuario existe
+        const usuario = await Riesgo.findById(_id);
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        // Luego, busca el macroproceso en los macroprocesos del usuario
+        const macroproceso = usuario.macroprocesos.find(mp => mp._id == macroprocesoId);
+        if (!macroproceso) {
+            return res.status(404).json({ error: 'Macroproceso no encontrado' });
+        }
+
+        // Finalmente, accede a los m_riesgos del macroproceso
+        const mriesgos = macroproceso.m_riesgos;
+
+        res.status(200).json(mriesgos);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error al buscar los m_riesgos' });
     }
 };
 
