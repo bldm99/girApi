@@ -11,6 +11,15 @@ const consecuenciaSchema = new Schema({
     descripcion: { type: String }, 
 });
 
+const controlSchema = new Schema({
+    nombre: { type: String },
+    complejidad: { type: String },
+    tipo:{ type: String },
+    descripcion: { type: String }, 
+});
+
+
+
 const riesgoSchema = new Schema({
     nombre: { type: String },
     impacto_desc: { type: String },
@@ -24,6 +33,7 @@ const riesgoSchema = new Schema({
     proceso_asignado: { type: String },
     r_causas: [causaSchema],
     r_consecuencias: [consecuenciaSchema],
+    r_controles: [controlSchema],
     fecha: { type: Date, default: Date.now } // Agrega el campo 'fecha' con la fecha actual por defecto
 });
 
@@ -61,7 +71,8 @@ const mySchema = new Schema({
     riesgos: [riesgoSchema] ,// Utiliza el subesquema 'riesgoSchema'
     macroprocesos: [macroproscesoSchema],
     causas: [causaSchema],
-    consecuencias: [consecuenciaSchema]
+    consecuencias: [consecuenciaSchema],
+    controles: [controlSchema]
 });
 
 

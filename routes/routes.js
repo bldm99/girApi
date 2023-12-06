@@ -3,7 +3,7 @@ import express from "express"
 import { body } from "express-validator"
 
 
-import { actualizarMriesgos, actualizarRcausas, actualizarRconsecuencias, buscarCausas, buscarConsecuencias, buscarMacroprocesos, buscarMacroriesgos, buscarRiesgos, r, registrarCausa, registrarConsecuencia, registrarMacroproceso, registrarRiesgo, registroUsuario } from "../controllers/controllers.js"
+import { actualizarMriesgos, actualizarRcausas, actualizarRconsecuencias, actualizarRcontroles, buscarCausas, buscarConsecuencias, buscarControles, buscarMacroprocesos, buscarMacroriesgos, buscarRiesgos, r, registrarCausa, registrarConsecuencia, registrarControl, registrarMacroproceso, registrarRiesgo, registroUsuario } from "../controllers/controllers.js"
 import { ResultadoValidation } from "../middlewares/ResultadoValidation.js"
 
 const router = express.Router()
@@ -33,6 +33,9 @@ router.route("/causas").post(registrarCausa).get(buscarCausas)
 router.route("/pushriesgocausa").post(actualizarRcausas)
 router.route("/consecuencias").post(registrarConsecuencia).get(buscarConsecuencias)
 router.route("/pushriesgoconsecuencia").post(actualizarRconsecuencias)
+router.route("/controles").post(registrarControl).get(buscarControles)
+router.route("/pushriesgocontrol").post(actualizarRcontroles)
+
 
 
 export default router

@@ -332,8 +332,66 @@ export const actualizarRconsecuencias = async (req, res) => {
 };
 /*-----------------------------------------End Consecuencias---------------------------------------*/
 
+/*-----------------------------------------Controles-------------------------------------------*/
+//registrar controles
+export const registrarControl = async (req, res) => {
+    //destructurando
+    const { _id, nombre, complejidad , tipo , descripcion } = req.body;
+    const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
+        $push: {
+            'controles': {
+                nombre,
+                complejidad,
+                tipo,
+                descripcion
+            }
+        }
+    })
+    if (!tableriesgo) {
+        res.status(500).json({ error: "No found" })
+    }
+    res.status(200).json(tableriesgo);
+}
+//Ver Controles de un usuario especifico
+export const buscarControles = async (req, res) => {
+    try {
+        const { _id } = req.query; // Obtener el ID del usuario desde los parámetros de la URL
+
+        const documento = await Riesgo.findById(_id);
+        if (!documento) {
+            return res.status(404).json({ error: 'Documento no encontrado' });
+        }
+        const controles = documento.controles;
+        res.status(200).json(controles);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error al buscar datos de causas' });
+    }
+};
+export const actualizarRcontroles = async (req, res) => {
+    const { _idUsuario, _idRiesgo, nuevasControles } = req.body; // Usar _idUsuario y _idRiesgo
+
+    //Validamos si nuevasControles tiene datos antes de hacer algun registro
+    if (!nuevasControles || nuevasControles.length === 0) {
+        return res.status(400).json({ error: 'La lista de nuevos riesgos está vacía o no se proporcionó.' });
+    }
+    try {
+        const resultado = await Riesgo.updateOne(
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo}, // Usar _idUsuario y _idRiesgo
+            { $push: { 'riesgos.$.r_controles': { $each: nuevasControles } } }
+        );
 
 
+        if (resultado.modifiedCount > 0) {
+            res.status(200).json({ message: 'Datos actualizados correctamente.' });
+        } else {
+            res.status(404).json({ error: 'No se encontró el documento para actualizar.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error en la actualización: ' + error.message });
+    }
+};
+/*-----------------------------------------End Controles---------------------------------------*/
 
 
 
