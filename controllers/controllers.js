@@ -75,7 +75,8 @@ export const registrarRiesgo = async (req, res) => {
                 riesgo,
                 proceso_asignado,
                 r_causas,
-                r_consecuencias
+                r_consecuencias, 
+                r_controles
             }
         }
     })
