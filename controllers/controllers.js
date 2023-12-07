@@ -60,7 +60,7 @@ export const registroUsuario = async (req, res) => {
 export const registrarRiesgo = async (req, res) => {
     //destructurando
     const { _id, nombre, impacto_desc, impacto_num, impacto_porc, probabilidad_desc, probabilidad_num,
-        probabilidad_porc, calificacion, riesgo, proceso_asignado ,r_causas , r_consecuencias } = req.body;
+        probabilidad_porc, calificacion, riesgo, proceso_asignado ,r_causas , r_consecuencias , r_controles } = req.body;
     const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'riesgos': {
