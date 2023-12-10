@@ -12,6 +12,36 @@ function valiarPassword(front, back) {
     return bcryptjs.compare(front, back)
 }
 
+
+// Datos generales para recomendacion
+export const recomendacionControl = async (req, res) => {
+    try {
+        // Consultar todos los documentos de la colección
+        const documentos = await Riesgo.find();
+
+        // Verificar si hay documentos
+        if (!documentos || documentos.length === 0) {
+            return res.status(404).json({ error: 'No se encontraron documentos' });
+        }
+
+        // Crear un array para almacenar todos los riesgos de todos los documentos
+        let riesgos = [];
+
+        // Iterar sobre cada documento y extraer los riesgos
+        documentos.forEach(documento => {
+            riesgos = riesgos.concat(documento.riesgos);
+        });
+
+        res.status(200).json(riesgos);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error al buscar los riesgos' });
+    }
+};
+
+
+
+
 export const registroUsuario = async (req, res) => {
     const { user, u_email, u_password, telefono, tarjeta, suscripcion } = req.body
 
@@ -393,6 +423,154 @@ export const actualizarRcontroles = async (req, res) => {
     }
 };
 /*-----------------------------------------End Controles---------------------------------------*/
+
+
+/*-----------------------------------------Alumnos-----------------------------------------------*/
+export const actualizarRalumnos= async (req, res) => {
+    const { _idUsuario, _idRiesgo, nuevasAlumnos } = req.body; // Usar _idUsuario y _idRiesgo
+
+    //Validamos si nuevasAlumnos tiene datos antes de hacer algun registro
+    if (!nuevasAlumnos || nuevasAlumnos.length === 0) {
+        return res.status(400).json({ error: 'La lista de nuevos alumnos está vacía o no se proporcionó.' });
+    }
+    try {
+        const resultado = await Riesgo.updateOne(
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo}, // Usar _idUsuario y _idRiesgo
+            { $push: { 'riesgos.$.r_alumnos': { $each: nuevasAlumnos } } }
+        );
+
+
+        if (resultado.modifiedCount > 0) {
+            res.status(200).json({ message: 'Datos actualizados correctamente.' });
+        } else {
+            res.status(404).json({ error: 'No se encontró el documento para actualizar.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error en la actualización: ' + error.message });
+    }
+};
+
+
+export const actualizarRalumnounico = async (req, res) => {
+    const { _idUsuario, _idRiesgo, alumnoId, sem1, sem2, sem3, sem4, sem5, sem6, sem7, sem8, sem9, sem10, sem11, sem12, sem13, sem14, sem15, sem16 } = req.body;
+
+    if (!_idUsuario || !_idRiesgo || !alumnoId) {
+        return res.status(400).json({ error: 'Se requieren _idUsuario, _idRiesgo y alumnoId.' });
+    }
+
+    try {
+        const updateFields = {};
+
+        if (sem1 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem1'] = sem1;
+        }
+
+        if (sem2 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem2'] = sem2;
+        }
+
+        if (sem3 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem3'] = sem3;
+        }
+
+        if (sem4 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem4'] = sem4;
+        }
+
+        if (sem5 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem5'] = sem5;
+        }
+
+        if (sem6 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem6'] = sem6;
+        }
+
+        if (sem7 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem7'] = sem7;
+        }
+
+        if (sem8 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem8'] = sem8;
+        }
+
+        if (sem9 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem9'] = sem9;
+        }
+
+        if (sem10 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem10'] = sem10;
+        }
+
+        if (sem11 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem11'] = sem11;
+        }
+
+        if (sem12 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem12'] = sem12;
+        }
+
+        if (sem13 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem13'] = sem13;
+        }
+
+        if (sem14 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem14'] = sem14;
+        }
+
+        if (sem15 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem15'] = sem15;
+        }
+
+        if (sem16 !== undefined) {
+            updateFields['riesgos.$[r].r_alumnos.$[a].sem16'] = sem16;
+        }
+
+        const resultado = await Riesgo.updateOne(
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo, "riesgos.r_alumnos._id": alumnoId },
+            {
+                $set: updateFields
+            },
+            {
+                arrayFilters: [
+                    { "r._id": _idRiesgo },
+                    { "a._id": alumnoId }
+                ]
+            }
+        );
+
+        if (resultado.modifiedCount > 0) {
+            res.status(200).json({ message: 'Datos actualizados correctamente.' });
+        } else {
+            res.status(404).json({ error: 'No se encontró el documento para actualizar.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error en la actualización: ' + error.message });
+    }
+};
+
+
+export const obtenerAlumnosDeRiesgo = async (req, res) => {
+    const { _idUsuario, _idRiesgo } = req.query;
+
+    try {
+        const usuario = await Riesgo.findOne({ "_id": _idUsuario, "riesgos._id": _idRiesgo });
+
+        if (!usuario) {
+            return res.status(404).json({ error: 'No se encontró el usuario o riesgo.' });
+        }
+
+        const riesgo = usuario.riesgos.find(r => r._id.toString() === _idRiesgo);
+        const alumnos = riesgo ? riesgo.r_alumnos : [];
+
+        res.status(200).json(alumnos);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener los datos de los alumnos: ' + error.message });
+    }
+};
+
+
+/*-----------------------------------------End Alumnos-------------------------------------------*/
+
 
 
 
