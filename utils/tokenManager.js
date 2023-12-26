@@ -16,15 +16,7 @@ export const generateRefreshToken = (uid , em , res) => {
     try {
         //generamos el token con el id y el email 
         const refreshToken = jwt.sign({uid , em} , process.env.JWT_REFRESH , {expiresIn})
-        res.cookie("refreshToken", refreshToken , {
-            //la cookie solo viviera en el http y no podra ser accedidp po js en frontend
-            httpOnly: true ,
-            //
-            /*secure: !(process.env.MODO === "developer"),*/
-            secure: true,
-            expires: new Date(Date.now() + expiresIn * 1000)
-
-        })
+        res.cookie("refreshToken", refreshToken)
 
     } catch (error) {
         console.log(error)
