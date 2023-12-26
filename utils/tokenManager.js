@@ -20,7 +20,7 @@ export const generateRefreshToken = (uid , em , res) => {
             //la cookie solo viviera en el http y no podra ser accedidp po js en frontend
             httpOnly: true ,
             //
-            secure: !(process.env.MODO === "developer"),
+            /*secure: !(process.env.MODO === "developer"),*/
             expires: new Date(Date.now() + expiresIn * 1000)
 
         })
