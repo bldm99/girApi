@@ -17,7 +17,7 @@ app.use(cookieParser())
 //app.use(cors())
 app.use(
     cors({
-      origin: "http://ip172-18-0-7-cm5kaqqo7r5g009oajrg-5200.direct.labs.play-with-docker.com", // Reemplaza esto con la URL de tu aplicación React
+      origin: "https://gir-project.vercel.app/", // Reemplaza esto con la URL de tu aplicación React
       credentials: true,
     })
 );
