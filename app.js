@@ -17,7 +17,7 @@ app.use(cookieParser())
 //app.use(cors())
 app.use(
     cors({
-      origin: "https://gir-project.vercel.app/", // Reemplaza esto con la URL de tu aplicación React
+      origin: "https://gir-project.vercel.app", // Reemplaza esto con la URL de tu aplicación React
       credentials: true,
     })
 );
