@@ -1,4 +1,5 @@
 import {Schema , model} from "mongoose";
+import bcryptjs from "bcryptjs"
 
 const causaSchema = new Schema({
     nombre: { type: String },
@@ -102,4 +103,12 @@ const mySchema = new Schema({
 });
 
 
+mySchema.methods.comparePassword = async function(candidatePassword){
+    //this nos permite acceder a una propiedad en este caso u_password
+    return await bcryptjs.compare(candidatePassword , this.u_password)
+}
+
+
 export const Riesgo = model('Riesgo' , mySchema)
+
+

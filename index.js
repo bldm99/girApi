@@ -5,14 +5,23 @@ import "./database/config.js"
 import xrouter from "./routes/routes.js"
 
 import cors from "cors"
+import cookieParser from "cookie-parser"
+
+
 import { connect } from "./database/config.js"
 
 const app = express()
-
 //Configuaracion express
 app.use(express.json())
+app.use(cookieParser())
+//app.use(cors())
+app.use(
+    cors({
+      origin: "http://localhost:5173", // Reemplaza esto con la URL de tu aplicación React
+      credentials: true,
+    })
+  );
 app.use(express.urlencoded({extended: true}))
-app.use(cors())
 app.use("/",xrouter)
 
 

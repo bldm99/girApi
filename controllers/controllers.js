@@ -1,11 +1,12 @@
 
 import express from "express";
+import jwt from "jsonwebtoken";
 import { Riesgo } from '../models/riesgos.js'
 
 
 
 import bcryptjs from "bcryptjs"
-import { generateToken } from "../utils/tokenManager.js";
+import { generateRefreshToken, generateToken } from "../utils/tokenManager.js";
 import { validationResult } from "express-validator";
 
 function valiarPassword(front, back) {
@@ -44,7 +45,6 @@ export const recomendacionControl = async (req, res) => {
 
 export const registroUsuario = async (req, res) => {
     const { user, u_email, u_password, telefono, tarjeta, suscripcion } = req.body
-
     try {
         // Verificar si el correo electrónico ya está registrado
         const correoExistente = await Riesgo.findOne({ "u_email": u_email });
@@ -70,13 +70,16 @@ export const registroUsuario = async (req, res) => {
 
         const savedClient = await tableriesgo.save();
 
-        // _id del cliente registrado
+        //Obtenemos el _id y el email del cliente registrado
         const clienteId = savedClient._id;
         const cliented_email = savedClient.u_email;
 
-        // Generar token JWT utilizando el ID del cliente registrado
-        const { token, expiresIn } = generateToken(clienteId, cliented_email);
-        return res.status(200).json({ token, expiresIn });
+        // Generar token JWT utilizando el ID y email del cliente registrado
+        const { token, expiresIn } = generateToken(clienteId, cliented_email)
+        //Nesesaria para genera un refresh token que se usara para crear una cookie
+        //llamada refreshToken
+        generateRefreshToken(clienteId, cliented_email, res)
+        return res.status(201).json({ token, expiresIn });
 
     } catch (error) {
         console.log(error.code);
@@ -84,13 +87,103 @@ export const registroUsuario = async (req, res) => {
         console.log(error.message); // Muestra el mensaje de error
         console.log(error.stack); // Muestra la pila de llamadas
     }
-
 }
+
+
+export const loginUser = async (req, res) => {
+    try {
+        // Destructurando
+        const { u_email, u_password } = req.body;
+
+        // Verificar si el correo electrónico existe
+        let user = await Riesgo.findOne({ u_email });
+        if (!user) {
+            return res.status(403).json({ error: "No existe el usuario" });
+        }
+
+        //Validamos 
+        const validacion = await user.comparePassword(u_password)
+        if (!validacion) {
+            return res.status(403).json({ error: "Contraseña incorrecta" });
+        }
+        /*const validacionp = await valiarPassword(d_password, user.d_password)
+        if (!validacionp) {
+            return res.status(403).json({ error: "Contraseña incorrecta" });
+        }*/
+
+        //generar token JWT
+        const { token, expiresIn } = generateToken(user._id, user.u_email)
+        //Nesesaria para genera un refresh token que se usara para crear una cookie
+        //llamada refreshToken
+        generateRefreshToken(user._id, user.u_email, res)
+        //Cookie
+        /*res.cookie("token", token , {
+            //la cookie solo viviera en el http y no podra ser accedidp po js en frontend
+            httpOnly: true ,
+            //
+            secure: !(process.env.MODO === "developer"),
+
+        })*/
+        return res.json({ token, expiresIn })
+        //return res.json({ ok: 'Login' })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: "Error del servidor" });
+    }
+}
+
+export const infoUser = async (req, res) => {
+    try {
+        const user = await Riesgo.findById(req.uid).lean()
+        return res.json({ email: user.u_email, uid: user._id })
+
+    } catch (error) {
+        return res.status(500).json({ error: 'Error de server' })
+    }
+}
+
+
+//Cada vez que se haga uso de esta funcion a taves de sus ruta y el usurio tengas
+//el refreshtoken le devolveremos un token valido
+export const refreshTokenx = async (req, res) => {
+    try {
+        //busca una cookie en el navegador fronend ,la cookie refresh dura 30 dias aprox
+        const refreshTokenCookie = req.cookies.refreshToken
+
+        //Verificamos si existe ese refreshToken en la cookie del usuario
+        if (!refreshTokenCookie) throw new Error('No existe el token')
+
+        //si el refreshToken existe a trves del payload le sacamos el id y el em
+        const { uid, em } = jwt.verify(refreshTokenCookie, process.env.JWT_REFRESH)
+
+        //como ya tendriamos el id y el em de refreshToken generamos un nuevo token de seguridad
+        //valido , este nuevo token sera otro diferente pero valido y real
+        const { token, expiresIn } = generateToken(uid, em)
+        //Ese token de seguridad lo devolvemos a la vista como petivion
+        return res.json({ token, expiresIn })
+
+    } catch (error) {
+        console.log(error.message)
+
+        const TokenVerificationErrors = {
+            "invalid signature": "La firma de JWT no es valida",
+            "jwt expired": "JWT expirado",
+            "invalid token": "Token no valido",
+            "No Bearer": "Utiliza formato Bearer",
+            "jwt malformed": "JWT formato no valido"
+        }
+        return res
+            .status(401)
+            .send({ error: TokenVerificationErrors[error.message] })
+    }
+}
+
+
 
 export const registrarRiesgo = async (req, res) => {
     //destructurando
     const { _id, nombre, impacto_desc, impacto_num, impacto_porc, probabilidad_desc, probabilidad_num,
-        probabilidad_porc, calificacion, riesgo, proceso_asignado ,r_causas , r_consecuencias , r_controles } = req.body;
+        probabilidad_porc, calificacion, riesgo, proceso_asignado, r_causas, r_consecuencias, r_controles } = req.body;
     const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'riesgos': {
@@ -105,7 +198,7 @@ export const registrarRiesgo = async (req, res) => {
                 riesgo,
                 proceso_asignado,
                 r_causas,
-                r_consecuencias, 
+                r_consecuencias,
                 r_controles
             }
         }
@@ -246,7 +339,7 @@ export const buscarMacroriesgos = async (req, res) => {
 //Registrar Causas
 export const registrarCausa = async (req, res) => {
     //destructurando
-    const { _id, nombre, categoria , descripcion } = req.body;
+    const { _id, nombre, categoria, descripcion } = req.body;
     const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'causas': {
@@ -287,7 +380,7 @@ export const actualizarRcausas = async (req, res) => {
     }
     try {
         const resultado = await Riesgo.updateOne(
-            { "_id": _idUsuario, "riesgos._id": _idRiesgo}, // Usar _idUsuario y _idMacroproceso
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo }, // Usar _idUsuario y _idMacroproceso
             { $push: { 'riesgos.$.r_causas': { $each: nuevasCausas } } }
         );
 
@@ -307,7 +400,7 @@ export const actualizarRcausas = async (req, res) => {
 //Registrar Consecuencias
 export const registrarConsecuencia = async (req, res) => {
     //destructurando
-    const { _id, nombre, categoria , descripcion } = req.body;
+    const { _id, nombre, categoria, descripcion } = req.body;
     const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'consecuencias': {
@@ -348,7 +441,7 @@ export const actualizarRconsecuencias = async (req, res) => {
     }
     try {
         const resultado = await Riesgo.updateOne(
-            { "_id": _idUsuario, "riesgos._id": _idRiesgo}, // Usar _idUsuario y _idRiesgo
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo }, // Usar _idUsuario y _idRiesgo
             { $push: { 'riesgos.$.r_consecuencias': { $each: nuevasConsecuencias } } }
         );
 
@@ -367,7 +460,7 @@ export const actualizarRconsecuencias = async (req, res) => {
 //registrar controles
 export const registrarControl = async (req, res) => {
     //destructurando
-    const { _id, nombre, complejidad , tipo , descripcion } = req.body;
+    const { _id, nombre, complejidad, tipo, descripcion } = req.body;
     const tableriesgo = await Riesgo.updateOne({ _id: _id }, {
         $push: {
             'controles': {
@@ -408,7 +501,7 @@ export const actualizarRcontroles = async (req, res) => {
     }
     try {
         const resultado = await Riesgo.updateOne(
-            { "_id": _idUsuario, "riesgos._id": _idRiesgo}, // Usar _idUsuario y _idRiesgo
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo }, // Usar _idUsuario y _idRiesgo
             { $push: { 'riesgos.$.r_controles': { $each: nuevasControles } } }
         );
 
@@ -426,7 +519,7 @@ export const actualizarRcontroles = async (req, res) => {
 
 
 /*-----------------------------------------Alumnos-----------------------------------------------*/
-export const actualizarRalumnos= async (req, res) => {
+export const actualizarRalumnos = async (req, res) => {
     const { _idUsuario, _idRiesgo, nuevasAlumnos } = req.body; // Usar _idUsuario y _idRiesgo
 
     //Validamos si nuevasAlumnos tiene datos antes de hacer algun registro
@@ -435,7 +528,7 @@ export const actualizarRalumnos= async (req, res) => {
     }
     try {
         const resultado = await Riesgo.updateOne(
-            { "_id": _idUsuario, "riesgos._id": _idRiesgo}, // Usar _idUsuario y _idRiesgo
+            { "_id": _idUsuario, "riesgos._id": _idRiesgo }, // Usar _idUsuario y _idRiesgo
             { $push: { 'riesgos.$.r_alumnos': { $each: nuevasAlumnos } } }
         );
 

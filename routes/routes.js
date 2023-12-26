@@ -3,13 +3,17 @@ import express from "express"
 import { body } from "express-validator"
 
 
-import { actualizarMriesgos, actualizarRalumnos, actualizarRalumnounico, actualizarRcausas, actualizarRconsecuencias, actualizarRcontroles, buscarCausas, buscarConsecuencias, buscarControles, buscarMacroprocesos, buscarMacroriesgos, buscarRiesgos, obtenerAlumnosDeRiesgo, r, recomendacionControl, registrarCausa, registrarConsecuencia, registrarControl, registrarMacroproceso, registrarRiesgo, registroUsuario } from "../controllers/controllers.js"
+import { actualizarMriesgos, actualizarRalumnos, actualizarRalumnounico, actualizarRcausas, actualizarRconsecuencias, actualizarRcontroles, buscarCausas, buscarConsecuencias, buscarControles, buscarMacroprocesos, buscarMacroriesgos, buscarRiesgos, infoUser, loginUser, obtenerAlumnosDeRiesgo, r, recomendacionControl, refreshTokenx, registrarCausa, registrarConsecuencia, registrarControl, registrarMacroproceso, registrarRiesgo, registroUsuario } from "../controllers/controllers.js"
 import { ResultadoValidation } from "../middlewares/ResultadoValidation.js"
+import { requireToken } from "../utils/requireToken.js"
+import { logout, verifyRefreshToken } from "../controllers/authcontroller.js"
 
 const router = express.Router()
 
+
+
 router.post(
-    "/registergir",
+    "/registergir", 
     [
         body('u_email' , 'Formato de email incorrecto')
             .trim()
@@ -19,10 +23,34 @@ router.post(
             .trim()
             .isLength({min:6})
     ],
+    //mostrando errores de validaciones
     ResultadoValidation,
+    //Funcion para registrar usuarios 
     registroUsuario
-    
 )
+ 
+router.post(
+    "/logingir",
+    [
+        body('u_email' , 'Formato de email incorrecto')
+            .trim()
+            .isEmail()
+            .normalizeEmail(),
+        body('u_password', 'Minimo 6 caracteres')
+            .trim()
+            .isLength({min:6})
+    ],
+    ResultadoValidation,
+    loginUser
+)
+
+router.get('/logout',logout)
+
+router.get('/protected' , requireToken ,infoUser)
+router.get("/refresh" , refreshTokenx)
+router.get('/verify-token', verifyRefreshToken);
+
+
 
 router.route("/registroriesgo").post(registrarRiesgo).get(buscarRiesgos) //agregar riesgos
 router.route("/registromacro").post(registrarMacroproceso).get(buscarMacroprocesos)
