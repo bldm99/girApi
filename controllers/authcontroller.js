@@ -2,10 +2,21 @@ import { verifyTokenRefresh } from "../utils/tokenManager.js";
 
 
 //Cerrar sesion de usuario
-export const logout = async (req, res) => {
+/*export const logout = async (req, res) => {
     res.clearCookie('refreshToken')
     res.json({ ok: true })
+}*/
+
+export const logout = async (req, res) => {
+  res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(0),  // Establece una fecha en el pasado para que la cookie expire inmediatamente
+      sameSite: "None"
+  });
+  res.json({ ok: true });
 }
+
 
 
 export const verifyRefreshToken = (req, res) => {
