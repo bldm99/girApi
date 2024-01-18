@@ -180,6 +180,7 @@ export const refreshTokenx = async (req, res) => {
 
 
 
+//-------------------------Riesgos------------------------------------
 export const registrarRiesgo = async (req, res) => {
     //destructurando
     const { _id, nombre, impacto_desc, impacto_num, impacto_porc, probabilidad_desc, probabilidad_num,
@@ -204,9 +205,18 @@ export const registrarRiesgo = async (req, res) => {
         }
     })
     if (!tableriesgo) {
-        res.status(500).json({ error: "No found" })
+        res.status(500).json({ error: "No al registrar" })
     }
-    res.status(200).json(tableriesgo);
+
+    const riesgoAgregado = await Riesgo.findOne(
+        { _id: _id },
+        { riesgos: { $slice: -1 } } // Obtener el último elemento del array de riesgos
+    );
+
+
+
+    //res.status(200).json(tableriesgo);
+    res.status(200).json(riesgoAgregado.riesgos[0]._id);
 }
 
 //Buscar todos los riesgos de un solo usuario
@@ -228,7 +238,46 @@ export const buscarRiesgos = async (req, res) => {
     }
 };
 
+export const actualizarRiesgo = async (req, res) => {
+    // Destructurando los datos del cuerpo de la solicitud
+    const { _id, _idRiesgo, nombre, impacto_desc, impacto_num, impacto_porc, probabilidad_desc, probabilidad_num,
+        probabilidad_porc, calificacion, riesgo } = req.body;
 
+    try {
+        // Verifica si el usuario existe
+        const usuario = await Riesgo.findById(_id);
+
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        // Busca el riesgo en el array de riesgos del usuario
+        const riesgoActualizado = usuario.riesgos.id(_idRiesgo);
+
+        if (!riesgoActualizado) {
+            return res.status(404).json({ error: 'Riesgo no encontrado' });
+        }
+
+        // Actualiza los campos del riesgo
+        riesgoActualizado.nombre = nombre;
+        riesgoActualizado.impacto_desc = impacto_desc;
+        riesgoActualizado.impacto_num = impacto_num;
+        riesgoActualizado.impacto_porc = impacto_porc;
+        riesgoActualizado.probabilidad_desc = probabilidad_desc;
+        riesgoActualizado.probabilidad_num = probabilidad_num;
+        riesgoActualizado.probabilidad_porc = probabilidad_porc;
+        riesgoActualizado.calificacion = calificacion;
+        riesgoActualizado.riesgo = riesgo;
+
+        // Guarda los cambios en la base de datos
+        await usuario.save();
+
+        res.status(200).json({ mensaje: 'Riesgo actualizado exitosamente' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error al actualizar el riesgo' });
+    }
+};
 
 /*----------------------------------Macroprocesos----------------------------*/
 
@@ -307,8 +356,38 @@ export const buscarMacroprocesos = async (req, res) => {
     }
 };
 
+//Buscar todos riesgos de todos los macroprocesos
+export const allriesgosAllmacroprocesos = async (req, res) => {
+    const { _id } = req.query;
+    try {
+        // Verifica si el usuario existe
+        const usuario = await Riesgo.findById(_id);
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
 
-//Buscar todos macroprocesos
+        const macroprocesos = usuario.macroprocesos;
+        const mriesgos = macroprocesos.map(macro => macro.m_riesgos);
+        const x = mriesgos.flat(1)
+
+        const z = x.map(riesgo => riesgo._id.toHexString());
+
+        const idsunicos = [...new Set(z)];
+        
+        const ojetoriesgos = usuario.riesgos.filter(riesgo => idsunicos.includes(riesgo._id.toHexString()));
+
+        //console.log(ojetoriesgos.length)
+        res.status(200).json(ojetoriesgos);
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error al buscar los riegos de los macroprocesos' });
+    }
+};
+
+
+
+//Buscar todos riesgos de u macroproceso
 export const buscarMacroriesgos = async (req, res) => {
     try {
         const { _id, macroprocesoId } = req.query;
@@ -326,9 +405,18 @@ export const buscarMacroriesgos = async (req, res) => {
         }
 
         // Finalmente, accede a los m_riesgos del macroproceso
-        const mriesgos = macroproceso.m_riesgos;
+        //const mriesgos = macroproceso.m_riesgos;
+        //const mriesgosIds = macroproceso.m_riesgos.map(riesgo => riesgo._id);
 
-        res.status(200).json(mriesgos);
+
+        //Buscamos los _id registrados en m_riesgos = array de riesgos
+        const mriesgosIds = macroproceso.m_riesgos.map(riesgo => riesgo._id.toHexString());
+        //const ids = ["65330d0884d5040688193afc","6531dfd06c327d571bdcabe2","6532d8632dbd9c9c38b596b7"]
+        //Utilizamos esos _id en Riesgos
+        const ojetoriesgos = usuario.riesgos.filter(riesgo => mriesgosIds.includes(riesgo._id.toHexString()));
+
+        res.status(200).json(ojetoriesgos);
+
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Error al buscar los m_riesgos' });

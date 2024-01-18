@@ -3,7 +3,7 @@ import express from "express"
 import { body } from "express-validator"
 
 
-import { actualizarMriesgos, actualizarRalumnos, actualizarRalumnounico, actualizarRcausas, actualizarRconsecuencias, actualizarRcontroles, buscarCausas, buscarConsecuencias, buscarControles, buscarMacroprocesos, buscarMacroriesgos, buscarRiesgos, infoUser, loginUser, obtenerAlumnosDeRiesgo, r, recomendacionControl, refreshTokenx, registrarCausa, registrarConsecuencia, registrarControl, registrarMacroproceso, registrarRiesgo, registroUsuario } from "../controllers/controllers.js"
+import { actualizarMriesgos, actualizarRalumnos, actualizarRalumnounico, actualizarRcausas, actualizarRconsecuencias, actualizarRcontroles, actualizarRiesgo, allriesgosAllmacroprocesos, buscarCausas, buscarConsecuencias, buscarControles, buscarMacroprocesos, buscarMacroriesgos, buscarRiesgos, infoUser, loginUser, obtenerAlumnosDeRiesgo, r, recomendacionControl, refreshTokenx, registrarCausa, registrarConsecuencia, registrarControl, registrarMacroproceso, registrarRiesgo, registroUsuario } from "../controllers/controllers.js"
 import { ResultadoValidation } from "../middlewares/ResultadoValidation.js"
 import { requireToken } from "../utils/requireToken.js"
 import { logout, verifyRefreshToken } from "../controllers/authcontroller.js"
@@ -52,8 +52,10 @@ router.get('/verify-token', verifyRefreshToken);
 
 
 
-router.route("/registroriesgo").post(registrarRiesgo).get(buscarRiesgos) //agregar riesgos
+router.route("/registroriesgo").post(registrarRiesgo).get(buscarRiesgos).put(actualizarRiesgo) //agregar riesgos
+
 router.route("/registromacro").post(registrarMacroproceso).get(buscarMacroprocesos)
+router.route("/allriesgosmacro").get(allriesgosAllmacroprocesos) //Buscar todos riesgos de todos los macroprocesos
 router.route("/pushmacro").post(actualizarMriesgos)  //pemite agregar mas riesgos al macroporcesos
 router.route("/macroriesgo").get(buscarMacroriesgos) 
 
